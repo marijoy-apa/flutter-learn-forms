@@ -8,7 +8,11 @@ class NewExpense extends StatelessWidget {
     return const SizedBox(
       height: double.infinity,
       width: double.infinity,
-      child: SingleChildScrollView(child: Text('Form page')),
+      child: SingleChildScrollView(
+        child: Center(
+          child: Text('Form page'),
+        ),
+      ),
     );
   }
 }

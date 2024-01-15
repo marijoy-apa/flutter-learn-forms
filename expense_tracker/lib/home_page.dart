@@ -22,7 +22,7 @@ class MyHomePage extends StatelessWidget {
           useSafeArea: true,
           isScrollControlled: true,
           context: context,
-          builder: (context) => NewExpense(),
+          builder: (context) => const NewExpense(),
         );
       },
       child: const Icon(Icons.add)),
