@@ -1,10 +1,24 @@
 import 'package:expense_tracker/data/expense_list.dart';
 import 'package:expense_tracker/expense_item.dart';
+import 'package:expense_tracker/model/expense.dart';
 import 'package:expense_tracker/new_expense.dart';
 import 'package:flutter/material.dart';
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  final List<Expense> _registeredExpenses = expenseList;
+
+  void _addExpense(Expense expense) {
+    setState(() {
+      _registeredExpenses.add(expense);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,15 +31,18 @@ class MyHomePage extends StatelessWidget {
         itemBuilder: (context, index) =>
             ExpenseItem(expense: expenseList[index]),
       ),
-      floatingActionButton: FloatingActionButton(onPressed: () {
-        showModalBottomSheet(
-          useSafeArea: true,
-          isScrollControlled: true,
-          context: context,
-          builder: (context) => const NewExpense(),
-        );
-      },
-      child: const Icon(Icons.add)),
+      floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            showModalBottomSheet(
+              useSafeArea: true,
+              isScrollControlled: true,
+              context: context,
+              builder: (context) => NewExpense(
+                onAddExpense: _addExpense,
+              ),
+            );
+          },
+          child: const Icon(Icons.add)),
     );
   }
 }
