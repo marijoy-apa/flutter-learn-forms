@@ -20,6 +20,29 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _removeExpense(Expense expense) {
+    final expenseIndex = _registeredExpenses.indexOf(expense);
+    setState(() {
+      _registeredExpenses.remove(expense);
+    });
+    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(
+          seconds: 3,
+        ),
+        content: const Text('Expense deleted'),
+        action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () {
+              setState(() {
+                _registeredExpenses.insert(expenseIndex, expense);
+              });
+            }),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,8 +51,16 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: ListView.builder(
         itemCount: expenseList.length,
-        itemBuilder: (context, index) =>
-            ExpenseItem(expense: expenseList[index]),
+        itemBuilder: (context, index) => Dismissible(
+          key: ValueKey(expenseList[index]),
+          background: Container(
+            color: Theme.of(context).colorScheme.error.withOpacity(0.75),
+            margin: EdgeInsets.symmetric(
+                horizontal: Theme.of(context).cardTheme.margin!.horizontal),
+          ),
+          onDismissed: (direction) => _removeExpense(expenseList[index]),
+          child: ExpenseItem(expense: expenseList[index]),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
           onPressed: () {
