@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:expense_tracker/photo.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/model/expense.dart';
@@ -18,6 +19,7 @@ class _NewExpenseState extends State<NewExpense> {
   var _enteredAmount = '';
   DateTime _selectedDate = DateTime.now();
   Category _selectedCategory = Category.leisure;
+  File? _selectedImage;
 
   void _presentDatePicker() async {
     final now = DateTime.now();
@@ -79,11 +81,15 @@ class _NewExpenseState extends State<NewExpense> {
       return;
     }
     formKey.currentState!.save();
-    widget.onAddExpense(Expense(
+    widget.onAddExpense(
+      Expense(
         title: _enteredTitle,
         amount: double.tryParse(_enteredAmount)!,
         date: _selectedDate,
-        category: _selectedCategory));
+        category: _selectedCategory,
+        imageFile: _selectedImage,
+      ),
+    );
 
     Navigator.pop(context);
   }
@@ -108,6 +114,11 @@ class _NewExpenseState extends State<NewExpense> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        AddPhoto(
+                          onPickImage: (pickedImage) =>
+                              _selectedImage = pickedImage,
+                        ),
+                        const SizedBox(width: 24),
                         Expanded(
                           child: TextFormField(
                             validator: (value) {
@@ -146,18 +157,31 @@ class _NewExpenseState extends State<NewExpense> {
                       ],
                     )
                   else
-                    TextFormField(
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Title cannot be empty';
-                        }
-                        return null;
-                      },
-                      onSaved: (newValue) => _enteredTitle = newValue!,
-                      decoration: const InputDecoration(
-                        label: Text('Title'),
-                      ),
-                      maxLength: 50,
+                    Row(
+                      children: [
+                        AddPhoto(
+                          onPickImage: (pickedImage) =>
+                              _selectedImage = pickedImage,
+                        ),
+                        SizedBox(
+                          width: 40,
+                        ),
+                        Expanded(
+                          child: TextFormField(
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Title cannot be empty';
+                              }
+                              return null;
+                            },
+                            onSaved: (newValue) => _enteredTitle = newValue!,
+                            decoration: const InputDecoration(
+                              label: Text('Title'),
+                            ),
+                            maxLength: 50,
+                          ),
+                        ),
+                      ],
                     ),
                   const SizedBox(
                     width: 16,
@@ -165,6 +189,9 @@ class _NewExpenseState extends State<NewExpense> {
                   if (width >= 600)
                     Row(
                       children: [
+                        SizedBox(
+                          width: 90,
+                        ),
                         Expanded(
                           child: DropdownButtonFormField(
                               value: _selectedCategory,
