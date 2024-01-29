@@ -3,6 +3,8 @@ import 'package:expense_tracker/photo.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/model/expense.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class NewExpense extends StatefulWidget {
   const NewExpense({super.key, required this.onAddExpense});
@@ -20,6 +22,7 @@ class _NewExpenseState extends State<NewExpense> {
   DateTime _selectedDate = DateTime.now();
   Category _selectedCategory = Category.leisure;
   File? _selectedImage;
+  var _isSending = false;
 
   void _presentDatePicker() async {
     final now = DateTime.now();
@@ -74,23 +77,43 @@ class _NewExpenseState extends State<NewExpense> {
     }
   }
 
-  void _submitExpenseData() {
+  void _submitExpenseData() async {
     final isValid = formKey.currentState!.validate();
     if (!isValid) {
       _showDialog();
       return;
     }
     formKey.currentState!.save();
-    widget.onAddExpense(
-      Expense(
-        title: _enteredTitle,
-        amount: double.tryParse(_enteredAmount)!,
-        date: _selectedDate,
-        category: _selectedCategory,
-        imageFile: _selectedImage,
+    setState(() {
+      _isSending = true;
+    });
+    final url = Uri.https('expense-tracker-af778-default-rtdb.firebaseio.com',
+        'expense-list.json');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(
+        {
+          'title': _enteredTitle,
+          'amount': double.tryParse(_enteredAmount),
+          'date': _selectedDate.toString(),
+          'category': _selectedCategory.name,
+          'imageFile': _selectedImage?.path,
+        },
       ),
     );
-
+    if (!context.mounted) {
+      return;
+    }
+    final Map<String, dynamic> resData = json.decode(response.body);
+    widget.onAddExpense(
+      Expense(
+          id: resData['name'],
+          title: _enteredTitle,
+          amount: double.tryParse(_enteredAmount)!,
+          date: _selectedDate,
+          category: _selectedCategory),
+    );
     Navigator.pop(context);
   }
 
@@ -125,7 +148,6 @@ class _NewExpenseState extends State<NewExpense> {
                               if (value == null || value.trim().isEmpty) {
                                 return 'Title cannot be empty';
                               }
-                              return null;
                             },
                             onSaved: (newValue) => _enteredTitle = newValue!,
                             decoration: const InputDecoration(
@@ -145,6 +167,7 @@ class _NewExpenseState extends State<NewExpense> {
                               if (enteredAmount == null || enteredAmount <= 1) {
                                 return 'Invalid amount';
                               }
+                              return null;
                             },
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
@@ -163,7 +186,7 @@ class _NewExpenseState extends State<NewExpense> {
                           onPickImage: (pickedImage) =>
                               _selectedImage = pickedImage,
                         ),
-                        SizedBox(
+                        const SizedBox(
                           width: 40,
                         ),
                         Expanded(
@@ -189,7 +212,7 @@ class _NewExpenseState extends State<NewExpense> {
                   if (width >= 600)
                     Row(
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 90,
                         ),
                         Expanded(
@@ -236,6 +259,7 @@ class _NewExpenseState extends State<NewExpense> {
                               if (enteredAmount == null || enteredAmount <= 1) {
                                 return 'Invalid amount';
                               }
+                              return null;
                             },
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
@@ -276,8 +300,14 @@ class _NewExpenseState extends State<NewExpense> {
                           child: const Text('Cancel'),
                         ),
                         ElevatedButton(
-                          onPressed: _submitExpenseData,
-                          child: const Text('Save Expense'),
+                          onPressed: _isSending ? null : _submitExpenseData,
+                          child: _isSending
+                              ? const SizedBox(
+                                  height: 16,
+                                  width: 16,
+                                  child: CircularProgressIndicator(),
+                                )
+                              : const Text('Save Expense'),
                         )
                       ],
                     )
@@ -307,8 +337,14 @@ class _NewExpenseState extends State<NewExpense> {
                           child: const Text('Cancel'),
                         ),
                         ElevatedButton(
-                          onPressed: _submitExpenseData,
-                          child: const Text('Save Expense'),
+                          onPressed: _isSending ? null : _submitExpenseData,
+                          child: _isSending
+                              ? const SizedBox(
+                                  height: 16,
+                                  width: 16,
+                                  child: CircularProgressIndicator(),
+                                )
+                              : const Text('Save Expense'),
                         )
                       ],
                     )
